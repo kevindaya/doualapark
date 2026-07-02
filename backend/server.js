@@ -9,12 +9,14 @@ const { notFound, errorHandler } = require('./middleware/validation');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+  : ['http://localhost:3000', 'http://localhost:5173'];
 
 // ─── Middlewares globaux ────────────────────────────────────────────────────
 app.use(cors({
   origin: (origin, callback) => {
-    // Autorise toutes les origines localhost (peu importe le port)
-    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
