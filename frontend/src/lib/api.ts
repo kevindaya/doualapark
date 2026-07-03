@@ -66,13 +66,14 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
 
-  const data = await res.json();
+  const json = await res.json();
 
-  if (!res.ok || !data.success) {
-    throw new Error(data.message || `Erreur ${res.status}`);
+  if (!res.ok || (typeof json === "object" && json?.success === false)) {
+    throw new Error(json?.message || `Erreur ${res.status}`);
   }
 
-  return data.data as T;
+  const payload = json?.data ?? json;
+  return payload as T;
 }
 
 // ─── Parkings ────────────────────────────────────────────────────────────────
