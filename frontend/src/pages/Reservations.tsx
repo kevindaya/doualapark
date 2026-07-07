@@ -484,7 +484,7 @@ const Reservations = () => {
                 {
                   icon: MapPin,
                   label: "Distance",
-                  value: distance !== null ? `${distance.toFixed(1)} km` : "—",
+                  value: distance !== null ? `${distance.toFixed(1)} km` : "Activez votre géolocalisation",
                 },
                 {
                   icon: CalendarDays,
