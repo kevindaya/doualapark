@@ -43,6 +43,8 @@ export interface ReservationAPI {
   parking_adresse?: string;
   parking_quartier?: string;
   parking_image?: string;
+  lat?: number;
+  lng?: number;
   user_nom?: string;
   numero_plaque?: string;
 }
@@ -86,14 +88,11 @@ export const parkingsAPI = {
     return apiFetch<ParkingAPI[]>(`/parkings${qs}`);
   },
 
-  getById: (id: number) =>
-    apiFetch<ParkingAPI>(`/parkings/${id}`),
+  getById: (id: number) => apiFetch<ParkingAPI>(`/parkings/${id}`),
 
-  getDisponibles: () =>
-    apiFetch<ParkingAPI[]>("/parkings/disponibles"),
+  getDisponibles: () => apiFetch<ParkingAPI[]>("/parkings/disponibles"),
 
-  getStats: () =>
-    apiFetch<StatsAPI>("/parkings/stats"),
+  getStats: () => apiFetch<StatsAPI>("/parkings/stats"),
 };
 
 // ─── Utilisateurs ────────────────────────────────────────────────────────────
@@ -107,10 +106,11 @@ export const utilisateursAPI = {
     }),
 
   getByPlaque: (plaque: string) =>
-    apiFetch<UtilisateurAPI>(`/utilisateurs/plaque/${encodeURIComponent(plaque)}`),
+    apiFetch<UtilisateurAPI>(
+      `/utilisateurs/plaque/${encodeURIComponent(plaque)}`,
+    ),
 
-  getById: (id: number) =>
-    apiFetch<UtilisateurAPI>(`/utilisateurs/${id}`),
+  getById: (id: number) => apiFetch<UtilisateurAPI>(`/utilisateurs/${id}`),
 };
 
 // ─── Réservations ─────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ export interface CreerReservationPayload {
   id_user: number;
   id_parking: number;
   heure_debut: string; // "HH:MM"
-  heure_fin: string;   // "HH:MM"
+  heure_fin: string; // "HH:MM"
   date_reservation?: string; // "YYYY-MM-DD", optionnel (défaut = aujourd'hui)
 }
 
@@ -135,8 +135,7 @@ export const reservationsAPI = {
     return apiFetch<ReservationAPI[]>(`/reservations/user/${id_user}${qs}`);
   },
 
-  getById: (id: number) =>
-    apiFetch<ReservationAPI>(`/reservations/${id}`),
+  getById: (id: number) => apiFetch<ReservationAPI>(`/reservations/${id}`),
 
   getByQR: (code: string) =>
     apiFetch<ReservationAPI>(`/reservations/qr/${code}`),
