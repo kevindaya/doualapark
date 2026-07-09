@@ -153,6 +153,23 @@ export const reservationsAPI = {
 
 import type { Parking } from "@/data/parkings";
 
+// ─── Cache-busting pour les images ────────────────────────────────────────────
+// Ajoute un paramètre à l'URL pour éviter le cache du navigateur/CDN
+function addCacheBusting(imageUrl: string): string {
+  if (!imageUrl) return imageUrl;
+  try {
+    const url = new URL(imageUrl);
+    // Ajouter un paramètre de cache-busting si ce n'est pas déjà présent
+    if (!url.searchParams.has("v")) {
+      url.searchParams.set("v", Math.floor(Date.now() / 60000).toString()); // Change toutes les minutes
+    }
+    return url.toString();
+  } catch {
+    // Si c'est une URL invalide, retourner telle quelle
+    return imageUrl;
+  }
+}
+
 export function adaptParking(p: ParkingAPI): Parking {
   return {
     id: p.id,
@@ -166,7 +183,7 @@ export function adaptParking(p: ParkingAPI): Parking {
     price: p.prix,
     status: p.statut,
     color: p.couleur,
-    image: p.image,
+    image: addCacheBusting(p.image),
     lat: Number(p.lat),
     lng: Number(p.lng),
   };
