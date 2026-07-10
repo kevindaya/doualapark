@@ -1,7 +1,7 @@
 // src/lib/api.ts
 // ─── Couche API centralisée — tous les appels vers le backend ────────────────
 
-const BASE_URL = "https://railway.app"
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 // ─── Types qui correspondent exactement à ce que renvoie le backend ──────────
 
