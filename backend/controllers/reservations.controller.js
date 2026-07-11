@@ -64,7 +64,7 @@ const getAllReservations = async (req, res) => {
       values.push(statut);
       query += ` WHERE r.statut = $1`;
     }
-    query += ` ORDER BY r.date_reservation DESC, r.heure_debut DESC`;
+    query += ` ORDER BY r.date_reservation DESC`;
     const { rows } = await pool.query(query, values);
     res.json({ success: true, data: rows });
   } catch (err) {
@@ -192,7 +192,7 @@ const getReservationsUser = async (req, res) => {
       values.push(statut);
       query += ` AND r.statut = $${values.length}`;
     }
-    query += ` ORDER BY r.date_reservation DESC, r.heure_debut DESC`;
+    query += ` ORDER BY r.date_reservation DESC`;
     const { rows } = await pool.query(query, values);
     res.json({ success: true, data: rows });
   } catch (err) {

@@ -8,7 +8,7 @@ const navLinks = [
   { label: "Accueil",      to: "/" },
   { label: "Rechercher",   to: "/rechercher" },
   { label: "Réservations", to: "/reservations" },
-  { label: "Profil",       to: "/profil" },
+  // { label: "Profil",       to: "/profil" },
 ];
 
 const Navbar = () => {

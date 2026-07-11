@@ -11,7 +11,7 @@ const links = [
   { icon: Home, label: "Accueil", to: "/" },
   { icon: Search, label: "Rechercher", to: "/rechercher" },
   { icon: CalendarDays, label: "Réservations", to: "/reservations" },
-  { icon: UserCircle, label: "Profil", to: "/profil" },
+  // { icon: UserCircle, label: "Profil", to: "/profil" },
 ];
 
 const MobileDrawer = ({ open, onClose }: Props) => {
