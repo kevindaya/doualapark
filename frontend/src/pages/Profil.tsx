@@ -5,9 +5,20 @@ import { User, Car, Bell, CreditCard, Clock, Settings, Shield, ChevronRight, Inf
 
 interface Vehicle { id: number; brand: string; model: string; color: string; plate: string; }
 
+const VEHICLES_KEY = "doualapark_vehicles";
+
+function loadVehicles(): Vehicle[] {
+  try {
+    const raw = localStorage.getItem(VEHICLES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 const Profil = () => {
   const navigate = useNavigate();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(loadVehicles);
   const [modal, setModal] = useState<string | null>(null);
   const [vehicleForm, setVehicleForm] = useState({ brand: "", model: "", color: "", plate: "" });
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -20,6 +31,15 @@ const Profil = () => {
     document.body.style.overflow = modal ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [modal]);
+
+  // Sauvegarde à chaque changement — survit maintenant à un changement de page.
+  useEffect(() => {
+    try {
+      localStorage.setItem(VEHICLES_KEY, JSON.stringify(vehicles));
+    } catch {
+      // localStorage indisponible — on ignore, ça ne doit pas casser l'app.
+    }
+  }, [vehicles]);
 
   const handleSaveVehicle = () => {
     if (!vehicleForm.plate.trim()) return;

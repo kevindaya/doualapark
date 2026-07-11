@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
-import { reservationsAPI } from "@/lib/api";
+import { reservationsAPI, utilisateursAPI } from "@/lib/api";
 import type { ReservationAPI } from "@/lib/api";
-import { getLocalUser } from "@/lib/localUser";
+import { getLocalUser, setLocalUser } from "@/lib/localUser";
 import {
   CalendarDays,
   MapPin,
@@ -73,6 +73,10 @@ const Reservations = () => {
   const [reservations, setReservations] = useState<ReservationAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasLocalUser, setHasLocalUser] = useState(false);
+  const [plateInput, setPlateInput] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("Toutes");
   const [selected, setSelected] = useState<ReservationAPI | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
@@ -83,32 +87,60 @@ const Reservations = () => {
   const [reviewText, setReviewText] = useState("");
   const [reviewSent, setReviewSent] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      // Pas de compte/connexion dans ce projet (voir page Profil) : on
-      // retrouve l'utilisateur de CET appareil, mémorisé après sa dernière
-      // réservation, et on ne charge QUE son historique — pas celui de tout
-      // le monde.
-      const localUser = getLocalUser();
-      if (!localUser) {
-        setReservations([]);
-        setLoading(false);
-        return;
-      }
+  // Charge l'historique d'un utilisateur donné (id_user)
+  const loadReservationsFor = async (id_user: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await reservationsAPI.getByUser(id_user);
+      setReservations(data);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await reservationsAPI.getByUser(localUser.id_user);
-        setReservations(data);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+  useEffect(() => {
+    // Pas de compte/connexion dans ce projet (voir page Profil) : on
+    // retrouve l'utilisateur de CET appareil, mémorisé après sa dernière
+    // réservation, et on ne charge QUE son historique — pas celui de tout
+    // le monde.
+    const localUser = getLocalUser();
+    if (!localUser) {
+      setHasLocalUser(false);
+      setLoading(false);
+      return;
+    }
+    setHasLocalUser(true);
+    loadReservationsFor(localUser.id_user);
   }, []);
+
+  // Retrouver son historique sur un nouvel appareil (ou après avoir vidé le
+  // navigateur) : même principe que sur la page Réserver, on identifie la
+  // personne par son numéro de plaque — pas d'email, rien de nouveau créé
+  // côté backend, tout existait déjà (createOrGet fonctionne pareil).
+  const handleLookupByPlate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!plateInput.trim()) return;
+    setLookupLoading(true);
+    setLookupError(null);
+    try {
+      const utilisateur = await utilisateursAPI.getByPlaque(plateInput.trim());
+      setLocalUser({
+        id_user: utilisateur.id_user,
+        nom: utilisateur.nom,
+        numero_plaque: utilisateur.numero_plaque,
+      });
+      setHasLocalUser(true);
+      setPlateInput("");
+      await loadReservationsFor(utilisateur.id_user);
+    } catch {
+      setLookupError("Aucun historique trouvé pour cette plaque. Vérifiez l'orthographe, ou faites votre première réservation.");
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   // Calculer la distance dynamique quand une réservation est sélectionnée
   useEffect(() => {
@@ -281,15 +313,56 @@ const Reservations = () => {
                     className="mb-4"
                   />
                   <p
-                    className="font-jakarta text-base mb-4"
+                    className="font-jakarta text-base mb-1"
                     style={{ color: "#64748B" }}
                   >
                     Aucune réservation pour l'instant
                   </p>
+
+                  {!hasLocalUser && (
+                    <>
+                      <p
+                        className="font-jakarta text-[13px] mb-4 text-center max-w-xs"
+                        style={{ color: "#94A3B8" }}
+                      >
+                        Déjà réservé depuis un autre appareil ? Entrez votre
+                        numéro de plaque pour retrouver votre historique.
+                      </p>
+                      <form
+                        onSubmit={handleLookupByPlate}
+                        className="w-full max-w-xs flex gap-2 mb-2"
+                      >
+                        <input
+                          value={plateInput}
+                          onChange={(e) => {
+                            setPlateInput(e.target.value);
+                            setLookupError(null);
+                          }}
+                          placeholder="Ex : LT 456 BB"
+                          className="flex-1 rounded-xl px-4 py-2.5 text-sm font-jakarta focus:outline-none"
+                          style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", color: "#0F172A" }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={lookupLoading || !plateInput.trim()}
+                          className="font-jakarta font-semibold text-sm rounded-xl px-4 disabled:opacity-50"
+                          style={{ background: "#0F172A", color: "white" }}
+                        >
+                          {lookupLoading ? <Loader2 size={16} className="animate-spin" /> : "Retrouver"}
+                        </button>
+                      </form>
+                      {lookupError && (
+                        <p className="font-jakarta text-xs mb-4 text-center max-w-xs" style={{ color: "#DC2626" }}>
+                          {lookupError}
+                        </p>
+                      )}
+                    </>
+                  )}
+
                   <Link
                     to="/rechercher"
-                    className="font-jakarta font-semibold text-sm rounded-[10px] px-6 py-3 inline-flex items-center gap-2"
-                    style={{ background: "#0F172A", color: "white" }}
+                    className="font-jakarta font-semibold text-sm rounded-[10px] px-6 py-3 inline-flex items-center gap-2 mt-2"
+                    style={{ background: hasLocalUser ? "#0F172A" : "#F8FAFC", color: hasLocalUser ? "white" : "#475569", border: hasLocalUser ? "none" : "1px solid #E2E8F0" }}
                   >
                     <Search size={16} strokeWidth={1.5} /> Réserver un parking
                   </Link>

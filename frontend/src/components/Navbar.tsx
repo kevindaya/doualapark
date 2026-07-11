@@ -4,11 +4,11 @@ import { Link, useLocation } from "react-router-dom";
 import { Search, Menu } from "lucide-react";
 import MobileDrawer from "./MobileDrawer";
 
-// ⚠️ Profil retiré — réactivé lors de l'upgrade
 const navLinks = [
   { label: "Accueil",      to: "/" },
   { label: "Rechercher",   to: "/rechercher" },
   { label: "Réservations", to: "/reservations" },
+  { label: "Profil",       to: "/profil" },
 ];
 
 const Navbar = () => {
