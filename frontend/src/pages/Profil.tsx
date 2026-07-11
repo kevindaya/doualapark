@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
-import { User, Car, Bell, CreditCard, Clock, Settings, Shield, ChevronRight, Info, X, Smartphone, Banknote, Trash2 } from "lucide-react";
+import { User, Car, Bell, CreditCard, Clock, Settings, Shield, ChevronRight, Info, X, Banknote, Trash2 } from "lucide-react";
 
 interface Vehicle { id: number; brand: string; model: string; color: string; plate: string; }
 
@@ -25,7 +25,6 @@ const Profil = () => {
   const [notifReservation, setNotifReservation] = useState(true);
   const [notifReminder, setNotifReminder] = useState(true);
   const [notifOffers, setNotifOffers] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("mobile");
 
   useEffect(() => {
     document.body.style.overflow = modal ? "hidden" : "";
@@ -56,7 +55,7 @@ const Profil = () => {
   const menuItems = [
     { icon: Car, title: "Mes véhicules", sub: "Gérer vos véhicules", action: () => setModal("vehicles") },
     { icon: Bell, title: "Notifications", sub: "Paramètres de notifications", action: () => setModal("notifications") },
-    { icon: CreditCard, title: "Moyens de paiement", sub: "Mobile Money, Carte", action: () => setModal("payment") },
+    { icon: CreditCard, title: "Moyens de paiement", sub: "Espèces", action: () => setModal("payment") },
     { icon: Clock, title: "Historique", sub: "Voir vos réservations", action: () => navigate("/reservations") },
     { icon: Settings, title: "Paramètres", sub: "Préférences de l'app", action: () => setModal("settings") },
     { icon: Shield, title: "Confidentialité", sub: "Politique de données", action: () => setModal("privacy") },
@@ -167,21 +166,17 @@ const Profil = () => {
 
       {modal === "payment" && (
         <BottomSheet onClose={() => setModal(null)} title="Moyens de paiement">
-          <div className="space-y-3">
-            {[{ id: "mobile", icon: Smartphone, label: "Mobile Money" }, { id: "card", icon: CreditCard, label: "Carte bancaire" }, { id: "cash", icon: Banknote, label: "Espèces" }].map(m => {
-              const Icon = m.icon;
-              return (
-                <button key={m.id} onClick={() => setPaymentMethod(m.id)} className="w-full flex items-center gap-3 p-4 rounded-xl transition-smooth"
-                  style={{ background: paymentMethod === m.id ? "#EFF6FF" : "#F8FAFC", border: `1.5px solid ${paymentMethod === m.id ? "#2563EB" : "#E2E8F0"}` }}>
-                  <Icon size={20} strokeWidth={1.5} style={{ color: paymentMethod === m.id ? "#2563EB" : "#94A3B8" }} />
-                  <span className="font-jakarta text-sm font-medium" style={{ color: "#0F172A" }}>{m.label}</span>
-                  {paymentMethod === m.id && <div className="ml-auto w-4 h-4 rounded-full gradient-primary" />}
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-3 p-4 rounded-xl"
+            style={{ background: "#EFF6FF", border: "1.5px solid #2563EB" }}>
+            <Banknote size={20} strokeWidth={1.5} style={{ color: "#2563EB" }} />
+            <div>
+              <p className="font-jakarta text-sm font-medium" style={{ color: "#0F172A" }}>Espèces</p>
+              <p className="font-jakarta text-xs" style={{ color: "#64748B" }}>Paiement sur place, directement à l'agent</p>
+            </div>
+            <div className="ml-auto w-4 h-4 rounded-full gradient-primary" />
           </div>
           <button onClick={() => setModal(null)} className="w-full mt-5 font-jakarta font-bold text-sm py-3.5 rounded-xl"
-            style={{ background: "#0F172A", color: "white" }}>Enregistrer</button>
+            style={{ background: "#0F172A", color: "white" }}>Fermer</button>
         </BottomSheet>
       )}
 

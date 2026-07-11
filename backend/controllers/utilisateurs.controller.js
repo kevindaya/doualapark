@@ -13,7 +13,7 @@ const createOrGetUtilisateur = async (req, res) => {
       });
     }
 
-    const plaque = numero_plaque.trim().toUpperCase();
+    const plaque = numero_plaque.trim().toUpperCase().replace(/\s+/g, "");
 
     // Cherche d'abord si la plaque existe déjà
     const existing = await pool.query(
@@ -42,7 +42,7 @@ const createOrGetUtilisateur = async (req, res) => {
 // Retrouve un utilisateur par son numéro de plaque
 const getUtilisateurByPlaque = async (req, res) => {
   try {
-    const plaque = req.params.plaque.trim().toUpperCase();
+    const plaque = req.params.plaque.trim().toUpperCase().replace(/\s+/g, "");
 
     const { rows } = await pool.query(
       'SELECT * FROM utilisateurs WHERE numero_plaque = $1',
