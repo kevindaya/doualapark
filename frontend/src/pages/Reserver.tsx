@@ -1,7 +1,6 @@
 // src/pages/Reserver.tsx
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { parkings } from "@/data/parkings";
 import { useParkingById } from "@/hooks/useParkings";
 import { useReserver } from "@/hooks/useReservation";
 import Footer from "@/components/Footer";
@@ -14,9 +13,7 @@ const Reserver = () => {
   const navigate  = useNavigate();
   const parkingId = Number(id);
 
-  const { parking: parkingAPI, loading: loadingParking } = useParkingById(parkingId);
-  const parkingLocal = parkings.find(p => p.id === parkingId) || parkings[0];
-  const parking = parkingAPI ?? parkingLocal;
+  const { parking, loading: loadingParking } = useParkingById(parkingId);
 
   const [form, setForm]     = useState({ name: "", plate: "", start: "08:00", end: "10:00" });
   const [errors, setErrors] = useState<{ name?: string; plate?: string; time?: string }>({});
@@ -28,7 +25,7 @@ const Reserver = () => {
     const [eh, em] = form.end.split(":").map(Number);
     return Math.max(1, Math.ceil((eh * 60 + em - sh * 60 - sm) / 60));
   })();
-  const total = duration * parking.price;
+  const total = duration * (parking?.price ?? 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +65,14 @@ const Reserver = () => {
       });
     }
   };
+
+  if (loadingParking || !parking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#F8FAFC" }}>
+        <Loader2 size={32} className="animate-spin" style={{ color: "#2563EB" }} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-20 lg:pb-0" style={{ background: "#F8FAFC" }}>

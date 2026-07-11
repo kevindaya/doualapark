@@ -1,94 +1,78 @@
 // src/hooks/useParkings.ts
 // ─── Hooks React pour les parkings ───────────────────────────────────────────
+// Migré vers React Query (déjà installé et déjà branché dans App.tsx via
+// QueryClientProvider, mais pas utilisé auparavant).
+//
+// Pourquoi : avant, useState/useEffect repartait de zéro à CHAQUE montage du
+// composant (donc à chaque fois qu'on quittait "Rechercher" et qu'on y
+// revenait) → nouveau fetch, nouveau flash de "0 résultat" pendant le
+// chargement. React Query garde les données en cache : en revisitant la page,
+// les données précédentes s'affichent instantanément pendant qu'un
+// rafraîchissement silencieux se fait en arrière-plan.
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { parkingsAPI, adaptParking } from "@/lib/api";
-import type { ParkingAPI, StatsAPI } from "@/lib/api";
-import type { Parking } from "@/data/parkings";
-
-// ─── Hook : liste de tous les parkings (avec fallback données locales) ────────
+import type { StatsAPI } from "@/lib/api";
 
 interface UseParkingsOptions {
   statut?: string;
   quartier?: string;
 }
 
+// ─── Hook : liste de tous les parkings ───────────────────────────────────────
+
 export function useParkings(options?: UseParkingsOptions) {
-  const [parkings, setParkings] = useState<Parking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["parkings", options?.statut, options?.quartier],
+    queryFn: async () => {
+      const rows = await parkingsAPI.getAll(options);
+      return rows.map(adaptParking);
+    },
+    staleTime: 60_000,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetch = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await parkingsAPI.getAll(options);
-        if (!cancelled) setParkings(data.map(adaptParking));
-      } catch (err) {
-        if (!cancelled) setError((err as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetch();
-    return () => { cancelled = true; };
-  }, [options?.statut, options?.quartier]);
-
-  return { parkings, loading, error };
+  return {
+    parkings: data ?? [],
+    loading: isLoading,
+    error: error ? (error as Error).message : null,
+  };
 }
 
 // ─── Hook : un seul parking par ID ───────────────────────────────────────────
 
 export function useParkingById(id: number | undefined) {
-  const [parking, setParking] = useState<Parking | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["parking", id],
+    queryFn: async () => {
+      const row = await parkingsAPI.getById(id as number);
+      return adaptParking(row);
+    },
+    enabled: typeof id === "number" && !Number.isNaN(id),
+    staleTime: 60_000,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-
-    const fetch = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await parkingsAPI.getById(id);
-        if (!cancelled) setParking(adaptParking(data));
-      } catch (err) {
-        if (!cancelled) setError((err as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetch();
-    return () => { cancelled = true; };
-  }, [id]);
-
-  return { parking, loading, error };
+  return {
+    parking: data ?? null,
+    loading: isLoading,
+    error: error ? (error as Error).message : null,
+  };
 }
 
 // ─── Hook : statistiques globales ────────────────────────────────────────────
 
 export function useParkingStats() {
-  const [stats, setStats] = useState<StatsAPI | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["parking-stats"],
+    queryFn: () => parkingsAPI.getStats(),
+    staleTime: 60_000,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    parkingsAPI.getStats()
-      .then(data => { if (!cancelled) setStats(data); })
-      .catch(err => { if (!cancelled) setError((err as Error).message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-
-    return () => { cancelled = true; };
-  }, []);
-
-  return { stats, loading, error };
+  return {
+    stats: (data ?? null) as StatsAPI | null,
+    loading: isLoading,
+    error: error ? (error as Error).message : null,
+  };
 }

@@ -1,7 +1,7 @@
 // src/pages/Rechercher.tsx
 import { useState, useMemo, useEffect, useRef } from "react";
-import { parkings as parkingsLocal } from "@/data/parkings";
 import { useParkings } from "@/hooks/useParkings";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import type { Parking } from "@/data/parkings";
 import ParkingCard from "@/components/ParkingCard";
 import { Search, Map, LocateFixed, MapPin, X, Loader2 } from "lucide-react";
@@ -139,19 +139,14 @@ const LeafletMap = ({ data, userPosition, mapCenter }: MapProps) => {
 
 // ── Page Rechercher ──────────────────────────────────────────────────────────
 const Rechercher = () => {
-  const { parkings: parkingsAPI } = useParkings();
-  const allParkings = parkingsAPI.length > 0 ? parkingsAPI : parkingsLocal;
+  const { parkings: allParkings, loading: parkingsLoading } = useParkings();
+  const { userPos, geoLoading, geoError, locateMe, clearGeoError, setGeoError } = useUserLocation();
 
   const [activeFilter, setActiveFilter] = useState("Le plus proche");
   const [search,       setSearch]       = useState("");
   const [showMap,      setShowMap]      = useState(false);
   const [mobileView,   setMobileView]   = useState<"list" | "map">("list");
   const [isMobile,     setIsMobile]     = useState(false);
-
-  // Géolocalisation
-  const [userPos,    setUserPos]    = useState<{ lat: number; lng: number } | null>(null);
-  const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError,   setGeoError]   = useState<string | null>(null);
 
   // Recherche de lieu pour centrer la carte
   const [placeInput,  setPlaceInput]  = useState("");
@@ -170,28 +165,31 @@ const Rechercher = () => {
     return () => clearTimeout(t);
   }, []);
 
-  // Bouton "Ma position"
-  const locateMe = () => {
-    if (!navigator.geolocation) {
-      setGeoError("Géolocalisation non supportée par votre navigateur.");
-      return;
+  // Demande automatique de la position dès l'arrivée sur la page — plus besoin
+  // de cliquer "Ma position" manuellement. Ne se redéclenche pas si on l'a déjà
+  // (le contexte la garde en mémoire tant qu'on ne quitte pas complètement le site).
+  useEffect(() => {
+    if (!userPos) locateMe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Recentre la carte dès que la position est connue. Le clic manuel sur
+  // "Ma position" bascule en plus la vue mobile sur la carte (le déclenchement
+  // automatique au chargement, lui, reste discret et ne change pas la vue).
+  const manualLocateRef = useRef(false);
+  useEffect(() => {
+    if (userPos) {
+      setMapCenter(userPos);
+      if (manualLocateRef.current && isMobile) {
+        setMobileView("map");
+        manualLocateRef.current = false;
+      }
     }
-    setGeoLoading(true);
-    setGeoError(null);
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setUserPos(coords);
-        setMapCenter(coords);
-        setGeoLoading(false);
-        if (isMobile) setMobileView("map");
-      },
-      () => {
-        setGeoError("Position refusée. Vérifiez les permissions de votre navigateur.");
-        setGeoLoading(false);
-      },
-      { timeout: 8000, maximumAge: 60000 }
-    );
+  }, [userPos, isMobile]);
+
+  const handleLocateClick = () => {
+    manualLocateRef.current = true;
+    locateMe();
   };
 
   // Centrer sur un lieu via Nominatim
@@ -276,7 +274,7 @@ const Rechercher = () => {
           </div>
 
           {/* Bouton Ma position */}
-          <button onClick={locateMe} disabled={geoLoading}
+          <button onClick={handleLocateClick} disabled={geoLoading}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: isMobile ? "10px 12px" : "10px 16px",
@@ -365,7 +363,12 @@ const Rechercher = () => {
               {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
               {userPos && " · distances réelles calculées"}
             </p>
-            {filtered.length === 0
+            {parkingsLoading
+              ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "48px 0", gap: 10 }}>
+                  <Loader2 size={32} className="animate-spin" style={{ color: "#2563EB" }} />
+                  <p className="font-jakarta" style={{ color: "#64748B", fontSize: 14 }}>Chargement des parkings…</p>
+                </div>
+              : filtered.length === 0
               ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "48px 0", gap: 10 }}>
                   <Search size={40} strokeWidth={1} color="#CBD5E1" />
                   <p className="font-jakarta" style={{ color: "#64748B", fontSize: 14 }}>Aucun parking trouvé</p>
@@ -394,7 +397,12 @@ const Rechercher = () => {
               {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
               {userPos && " · triés par distance"}
             </p>
-            {filtered.length === 0
+            {parkingsLoading
+              ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "64px 0", gap: 12 }}>
+                  <Loader2 size={36} className="animate-spin" style={{ color: "#2563EB" }} />
+                  <p className="font-jakarta" style={{ color: "#64748B", fontSize: 14 }}>Chargement des parkings…</p>
+                </div>
+              : filtered.length === 0
               ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "64px 0", gap: 12 }}>
                   <Search size={48} strokeWidth={1} color="#CBD5E1" />
                   <p className="font-jakarta" style={{ color: "#64748B", fontSize: 14 }}>Aucun parking trouvé</p>

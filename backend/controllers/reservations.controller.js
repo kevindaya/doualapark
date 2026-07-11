@@ -34,7 +34,7 @@ const mettreAJourStatutParking = async (client, idParking) => {
         ? "#F97316"
         : "#EF4444";
   await client.query(
-    "UPDATE parkings SET statut = $1::statut_parking, couleur = $2 WHERE id = $3",
+    "UPDATE parkings SET statut = $1, couleur = $2 WHERE id = $3",
     [statut, couleur, idParking],
   );
 };

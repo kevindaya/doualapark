@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Parking, statusConfig } from "@/data/parkings";
 import { MapPin, Star, ArrowRight, Eye } from "lucide-react";
 
 const ParkingCard = ({ parking }: { parking: Parking }) => {
-  const s = statusConfig[parking.status];
+  const s = statusConfig[parking.status] ?? statusConfig.libre;
   const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
+
+  // Si l'URL de l'image change (ex: passage du mock data aux vraies données),
+  // on redonne une chance à la nouvelle URL au lieu de rester bloqué sur le
+  // placeholder à cause d'un échec précédent sur une AUTRE image.
+  useEffect(() => {
+    setImgError(false);
+  }, [parking.image]);
 
   return (
     <div

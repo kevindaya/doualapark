@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { reservationsAPI, utilisateursAPI } from "@/lib/api";
 import type { ReservationAPI } from "@/lib/api";
+import { setLocalUser } from "@/lib/localUser";
 
 // ─── Hook principal : soumettre une réservation ───────────────────────────────
 // Gère : création utilisateur → création réservation → retourne le résultat
@@ -39,6 +40,14 @@ export function useReserver(): UseReserverResult {
         payload.nom,
         payload.numero_plaque
       );
+
+      // Mémorise cet utilisateur sur cet appareil, pour que "Mes Réservations"
+      // affiche son propre historique par la suite.
+      setLocalUser({
+        id_user: utilisateur.id_user,
+        nom: utilisateur.nom,
+        numero_plaque: utilisateur.numero_plaque,
+      });
 
       // Étape 2 : créer la réservation
       const result = await reservationsAPI.creer({

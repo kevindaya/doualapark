@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { reservationsAPI } from "@/lib/api";
 import type { ReservationAPI } from "@/lib/api";
+import { getLocalUser } from "@/lib/localUser";
 import {
   CalendarDays,
   MapPin,
@@ -84,15 +85,22 @@ const Reservations = () => {
 
   useEffect(() => {
     const load = async () => {
+      // Pas de compte/connexion dans ce projet (voir page Profil) : on
+      // retrouve l'utilisateur de CET appareil, mémorisé après sa dernière
+      // réservation, et on ne charge QUE son historique — pas celui de tout
+      // le monde.
+      const localUser = getLocalUser();
+      if (!localUser) {
+        setReservations([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
       try {
-        const BASE =
-          import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const res = await fetch(`${BASE}/reservations/all`);
-        const data = await res.json();
-        if (!data.success) throw new Error(data.message);
-        setReservations(data.data);
+        const data = await reservationsAPI.getByUser(localUser.id_user);
+        setReservations(data);
       } catch (err) {
         setError((err as Error).message);
       } finally {

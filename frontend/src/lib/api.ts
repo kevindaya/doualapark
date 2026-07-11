@@ -153,21 +153,27 @@ export const reservationsAPI = {
 
 import type { Parking } from "@/data/parkings";
 
-// ─── Cache-busting pour les images ────────────────────────────────────────────
-// Ajoute un paramètre à l'URL pour éviter le cache du navigateur/CDN
-function addCacheBusting(imageUrl: string): string {
-  if (!imageUrl) return imageUrl;
-  try {
-    const url = new URL(imageUrl);
-    // Ajouter un paramètre de cache-busting si ce n'est pas déjà présent
-    if (!url.searchParams.has("v")) {
-      url.searchParams.set("v", Math.floor(Date.now() / 60000).toString()); // Change toutes les minutes
-    }
-    return url.toString();
-  } catch {
-    // Si c'est une URL invalide, retourner telle quelle
-    return imageUrl;
+// NOTE : il y avait ici une fonction addCacheBusting() qui ajoutait ?v=...
+// à chaque URL d'image pour éviter un cache trop agressif. Elle a été retirée :
+// le "vieux data qui s'affiche" venait en réalité du mock data de secours dans
+// data/parkings.ts (voir Rechercher.tsx / useParkings.ts), pas d'un cache
+// d'images. Or ce ?v= ajouté cassait certaines URLs Google (gstatic.com
+// /images?q=tbn:...) qui sont des liens signés/tokenisés très sensibles à tout
+// paramètre supplémentaire — c'est ce qui expliquait les images manquantes
+// pour certains parkings (Aéroport, Place Besseke, Marché Mboppi).
+
+const VALID_STATUSES = ["libre", "quasi-plein", "complet"] as const;
+
+// Rend l'app tolérante aux variations dans la donnée ("quasi plein" au lieu de
+// "quasi-plein", majuscules, espaces en trop...) plutôt que de planter tout le
+// rendu si une ligne de la base est légèrement différente de ce qui est attendu.
+function normalizeStatus(raw: string): Parking["status"] {
+  const cleaned = (raw || "").trim().toLowerCase().replace(/\s+/g, "-");
+  if ((VALID_STATUSES as readonly string[]).includes(cleaned)) {
+    return cleaned as Parking["status"];
   }
+  console.warn(`Statut de parking inconnu : "${raw}" — traité comme "libre"`);
+  return "libre";
 }
 
 export function adaptParking(p: ParkingAPI): Parking {
@@ -181,9 +187,9 @@ export function adaptParking(p: ParkingAPI): Parking {
     rating: Number(p.note),
     distance: p.distance ? `${p.distance} km` : "—",
     price: p.prix,
-    status: p.statut,
+    status: normalizeStatus(p.statut),
     color: p.couleur,
-    image: addCacheBusting(p.image),
+    image: p.image,
     lat: Number(p.lat),
     lng: Number(p.lng),
   };

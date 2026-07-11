@@ -1,7 +1,8 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { parkings, statusConfig } from "@/data/parkings";
+import { statusConfig } from "@/data/parkings";
+import { useParkingById } from "@/hooks/useParkings";
 import Footer from "@/components/Footer";
-import { ArrowLeft, MapPin, Star, Clock, Shield, Zap, Camera, Lightbulb, Accessibility, Car, Navigation } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Clock, Shield, Zap, Camera, Lightbulb, Accessibility, Car, Navigation, Loader2 } from "lucide-react";
 import { useRef, useEffect } from "react";
 
 // ── Mini carte vanilla Leaflet ──────────────────────────────────────────────
@@ -58,8 +59,28 @@ const reviews = [
 const ParkingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const parking = parkings.find((p) => p.id === Number(id)) || parkings[0];
-  const s = statusConfig[parking.status];
+  const { parking, loading, error } = useParkingById(Number(id));
+
+  if (loading) {
+    return (
+      <div style={{ paddingTop: 68, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-surface,#F8FAFC)" }}>
+        <Loader2 size={32} className="animate-spin" style={{ color: "#2563EB" }} />
+      </div>
+    );
+  }
+
+  if (!parking || error) {
+    return (
+      <div style={{ paddingTop: 68, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, background: "var(--bg-surface,#F8FAFC)" }}>
+        <p className="font-jakarta" style={{ color: "#64748B", fontSize: 14 }}>Parking introuvable.</p>
+        <button onClick={() => navigate("/rechercher")} style={{ color: "#2563EB", fontSize: 14, fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>
+          Retour à la recherche
+        </button>
+      </div>
+    );
+  }
+
+  const s = statusConfig[parking.status] ?? statusConfig.libre;
   const available = parking.placesTotal - parking.placesUsed;
 
   return (
@@ -79,7 +100,7 @@ const ParkingDetail = () => {
       {/* Hero image — haute qualité */}
       <div style={{ position: "relative", height: 240, overflow: "hidden" }}>
         <img
-          src={`${parking.image.split("?")[0]}?w=1200&q=90&fit=crop`}
+          src={parking.image}
           alt={parking.name}
           style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
           onError={(e) => {

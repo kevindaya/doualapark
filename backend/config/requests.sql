@@ -1,5 +1,4 @@
 -- 1. On demarre la transaction securisee
-BEGIN;
 
 -- 2. On applique les nouvelles donnees reelles de Douala
 UPDATE parkings
@@ -68,5 +67,4 @@ WHERE id IN (1, 2, 3, 4, 5, 6, 7, 8);
 -- 3. On affiche le resultat dans le terminal pour verification visuelle
 SELECT id, nom, quartier, distance, lat, lng FROM parkings ORDER BY id;
 
--- 4. SeCURITe : On annule tout pour ce premier essai !
-COMMIT;
+
