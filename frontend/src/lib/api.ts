@@ -130,21 +130,35 @@ export const reservationsAPI = {
       body: JSON.stringify(payload),
     }),
 
+  // Toutes les réservations
+  getAll: () =>
+    apiFetch<ReservationAPI[]>("/reservations/all"),
+
+  // Réservations d'un utilisateur
   getByUser: (id_user: number, statut?: string) => {
     const qs = statut ? `?statut=${statut}` : "";
     return apiFetch<ReservationAPI[]>(`/reservations/user/${id_user}${qs}`);
   },
 
-  getById: (id: number) => apiFetch<ReservationAPI>(`/reservations/${id}`),
+  // Une réservation
+  getById: (id: number) =>
+    apiFetch<ReservationAPI>(`/reservations/${id}`),
 
+  // Recherche par QR
   getByQR: (code: string) =>
     apiFetch<ReservationAPI>(`/reservations/qr/${code}`),
 
+  // Terminer une réservation
   terminer: (id: number) =>
-    apiFetch<void>(`/reservations/${id}/terminer`, { method: "PATCH" }),
+    apiFetch<void>(`/reservations/${id}/terminer`, {
+      method: "PATCH",
+    }),
 
+  // Annuler une réservation
   annuler: (id: number) =>
-    apiFetch<void>(`/reservations/${id}/annuler`, { method: "PATCH" }),
+    apiFetch<void>(`/reservations/${id}/annuler`, {
+      method: "PATCH",
+    }),
 };
 
 // ─── Adaptateur : convertit ParkingAPI → format Parking du frontend ──────────

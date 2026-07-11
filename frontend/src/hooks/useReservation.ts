@@ -30,7 +30,9 @@ export function useReserver(): UseReserverResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const soumettre = async (payload: ReserverPayload): Promise<ReservationAPI | null> => {
+  const soumettre = async (
+    payload: ReserverPayload,
+  ): Promise<ReservationAPI | null> => {
     setLoading(true);
     setError(null);
 
@@ -38,7 +40,7 @@ export function useReserver(): UseReserverResult {
       // Étape 1 : créer ou récupérer l'utilisateur via sa plaque
       const utilisateur = await utilisateursAPI.createOrGet(
         payload.nom,
-        payload.numero_plaque
+        payload.numero_plaque,
       );
 
       // Mémorise cet utilisateur sur cet appareil, pour que "Mes Réservations"
@@ -84,12 +86,21 @@ export function useReservationsUser(id_user: number | null) {
     let cancelled = false;
 
     setLoading(true);
-    reservationsAPI.getByUser(id_user)
-      .then(data => { if (!cancelled) setReservations(data); })
-      .catch(err => { if (!cancelled) setError((err as Error).message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+    reservationsAPI
+      .getByUser(id_user)
+      .then((data) => {
+        if (!cancelled) setReservations(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError((err as Error).message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id_user]);
 
   return { reservations, loading, error };
@@ -98,7 +109,11 @@ export function useReservationsUser(id_user: number | null) {
 // ─── Hook : retrouver un utilisateur par plaque (pour la page Profil) ─────────
 
 export function useUtilisateurByPlaque(plaque: string | null) {
-  const [utilisateur, setUtilisateur] = useState<{ id_user: number; nom: string; numero_plaque: string } | null>(null);
+  const [utilisateur, setUtilisateur] = useState<{
+    id_user: number;
+    nom: string;
+    numero_plaque: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { reservationsAPI } from "@/lib/api";
 import type { ReservationAPI } from "@/lib/api";
-import { getLocalUser } from "@/lib/localUser";
 import {
   CalendarDays,
   MapPin,
@@ -85,11 +84,12 @@ const Reservations = () => {
   const [reviewSent, setReviewSent] = useState(false);
 
   // Charge l'historique d'un utilisateur donné (id_user)
-  const loadReservationsFor = async (id_user: number) => {
+  const loadReservations = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const data = await reservationsAPI.getByUser(id_user);
+      const data = await reservationsAPI.getAll();
       setReservations(data);
     } catch (err) {
       setError((err as Error).message);
@@ -98,20 +98,9 @@ const Reservations = () => {
     }
   };
 
-  useEffect(() => {
-    // Pas de compte/connexion dans ce projet (voir page Profil) : on
-    // retrouve l'utilisateur de CET appareil, mémorisé après sa dernière
-    // réservation, et on ne charge QUE son historique — pas celui de tout
-    // le monde.
-    const localUser = getLocalUser();
-    if (!localUser) {
-      setHasLocalUser(false);
-      setLoading(false);
-      return;
-    }
-    setHasLocalUser(true);
-    loadReservationsFor(localUser.id_user);
-  }, []);
+useEffect(() => {
+  loadReservations();
+}, []);
 
   // Calculer la distance dynamique quand une réservation est sélectionnée
   useEffect(() => {
@@ -290,12 +279,12 @@ const Reservations = () => {
                     {reservations.length === 0
                       ? "Aucune réservation pour l'instant"
                       : activeTab === "En cours"
-                      ? "Aucune réservation en cours"
-                      : activeTab === "Terminées"
-                      ? "Aucune réservation terminée"
-                      : activeTab === "Annulées"
-                      ? "Aucune réservation annulée"
-                      : "Aucune réservation"}
+                        ? "Aucune réservation en cours"
+                        : activeTab === "Terminées"
+                          ? "Aucune réservation terminée"
+                          : activeTab === "Annulées"
+                            ? "Aucune réservation annulée"
+                            : "Aucune réservation"}
                   </p>
                   {reservations.length === 0 && (
                     <Link
@@ -505,7 +494,10 @@ const Reservations = () => {
                 {
                   icon: MapPin,
                   label: "Distance",
-                  value: distance !== null ? `${distance.toFixed(1)} km` : "Activez votre géolocalisation",
+                  value:
+                    distance !== null
+                      ? `${distance.toFixed(1)} km`
+                      : "Activez votre géolocalisation",
                 },
                 {
                   icon: CalendarDays,
