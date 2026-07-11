@@ -19,7 +19,7 @@ const stats = [
 const features = [
   { icon: Map, title: "Carte en temps réel", text: "Visualisez les parkings et leur disponibilité directement sur la carte." },
   { icon: Zap, title: "Réservation instantanée", text: "Réservez en quelques secondes, sans créer de compte." },
-  { icon: CreditCard, title: "Paiement simplifié", text: "Mobile Money, carte bancaire ou espèces sur place." },
+  { icon: CreditCard, title: "Paiement simplifié", text: "En espèces sur place." },
   { icon: Shield, title: "Sécurité garantie", text: "QR code unique et suivi de chaque réservation." },
   { icon: Clock, title: "Historique complet", text: "Retrouvez toutes vos réservations passées et en cours." },
   { icon: Smartphone, title: "Application mobile", text: "Accédez à DoualaPark depuis n'importe quel smartphone." },

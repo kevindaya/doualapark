@@ -56,7 +56,7 @@ const Profil = () => {
   const menuItems = [
     { icon: Car, title: "Mes véhicules", sub: "Gérer vos véhicules", action: () => setModal("vehicles") },
     { icon: Bell, title: "Notifications", sub: "Paramètres de notifications", action: () => setModal("notifications") },
-    { icon: CreditCard, title: "Moyens de paiement", sub: "Mobile Money, Carte", action: () => setModal("payment") },
+    { icon: CreditCard, title: "Moyens de paiement", sub: "Mobile Money sera intégré dans une prochaine version", action: () => setModal("payment") },
     { icon: Clock, title: "Historique", sub: "Voir vos réservations", action: () => navigate("/reservations") },
     { icon: Settings, title: "Paramètres", sub: "Préférences de l'app", action: () => setModal("settings") },
     { icon: Shield, title: "Confidentialité", sub: "Politique de données", action: () => setModal("privacy") },
@@ -92,14 +92,6 @@ const Profil = () => {
           <p className="font-jakarta text-sm mt-1" style={{ color: "#94A3B8" }}>Aucun compte connecté</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-in-up stagger-3">
-          {[{ value: "0", label: "Réservations" }, { value: "0", label: "Favoris" }, { value: "0 FCFA", label: "Dépensé" }].map((s, i) => (
-            <div key={i} className="bg-white rounded-[14px] p-4 text-center" style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-              <p className="font-space font-bold text-[22px]" style={{ color: "#2563EB" }}>{s.value}</p>
-              <p className="font-jakarta text-[12px] mt-1" style={{ color: "#64748B" }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
 
         {vehicles.length > 0 && (
           <div className="mb-4 space-y-2 animate-fade-in-up stagger-4">
@@ -168,7 +160,7 @@ const Profil = () => {
       {modal === "payment" && (
         <BottomSheet onClose={() => setModal(null)} title="Moyens de paiement">
           <div className="space-y-3">
-            {[{ id: "mobile", icon: Smartphone, label: "Mobile Money" }, { id: "card", icon: CreditCard, label: "Carte bancaire" }, { id: "cash", icon: Banknote, label: "Espèces" }].map(m => {
+            {[{ id: "cash", icon: Banknote, label: "Espèces" }].map(m => {
               const Icon = m.icon;
               return (
                 <button key={m.id} onClick={() => setPaymentMethod(m.id)} className="w-full flex items-center gap-3 p-4 rounded-xl transition-smooth"
