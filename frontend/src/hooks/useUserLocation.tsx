@@ -39,11 +39,20 @@ export function UserLocationProvider({ children }: { children: ReactNode }) {
         setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setGeoLoading(false);
       },
-      () => {
-        setGeoError("Position refusée. Vérifiez les permissions de votre navigateur.");
+      (err) => {
         setGeoLoading(false);
+        // PERMISSION_DENIED (1) : refus réel, définitif tant que l'utilisateur
+        // ne change pas les permissions du navigateur.
+        // TIMEOUT (3) / POSITION_UNAVAILABLE (2) : souvent juste "l'utilisateur
+        // n'a pas encore répondu à la popup" — pas un refus, il faut pouvoir
+        // réessayer normalement.
+        if (err.code === err.PERMISSION_DENIED) {
+          setGeoError("Position refusée. Vérifiez les permissions de votre navigateur.");
+        } else {
+          setGeoError("La localisation prend plus de temps que prévu. Réessayez.");
+        }
       },
-      { timeout: 8000, maximumAge: 60000 }
+      { timeout: 20000, maximumAge: 60000 }
     );
   }, []);
 
